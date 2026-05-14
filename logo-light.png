@@ -1,0 +1,329 @@
+import { Link } from "wouter";
+import {
+  Phone,
+  MessageSquare,
+  CalendarClock,
+  Plane,
+  Sprout,
+  ShieldCheck,
+  MapPin,
+  ArrowRight,
+  Mail,
+} from "lucide-react";
+import heroImg from "@/assets/drone-hero.jpg";
+import { SiteShell, PHONE, PHONE_TEL, PHONE_SMS, EMAIL, EMAIL_MAILTO } from "@/components/SiteShell";
+
+const features = [
+  {
+    icon: CalendarClock,
+    title: "Fast scheduling",
+    body: "Tight spray windows? We move quickly so you don't lose yield to disease pressure or weather delays.",
+  },
+  {
+    icon: Plane,
+    title: "Modern drone, careful coverage",
+    body: "Flown with a DJI T50 for accurate spray patterns, even rate control, and minimal drift compared to ground rigs.",
+  },
+  {
+    icon: Sprout,
+    title: "Zero crop damage",
+    body: "Aerial application means no tracks, no compaction, and no driving through standing crop late in the season.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Local and reliable",
+    body: "Based in Madison County, Illinois. Owner-operated. You'll talk to the person flying your fields.",
+  },
+];
+
+const services = [
+  {
+    title: "Fungicide application",
+    body: "Corn and soybean fungicide passes timed for tassel, R1–R3, and disease-pressure spot treatments.",
+  },
+  {
+    title: "Spot & field-edge spraying",
+    body: "Treat problem areas, waterways, and irregular field corners that ground equipment can't reach efficiently.",
+  },
+  {
+    title: "Late-season & wet-field jobs",
+    body: "When fields are too tall or too wet for a ground rig, drones get the job done without rutting or trampling.",
+  },
+  {
+    title: "Cover crop seeding (on request)",
+    body: "Aerial seeding for cover crop establishment into standing corn or beans. Ask about availability.",
+  },
+];
+
+const counties = [
+  "Madison",
+  "St. Clair",
+  "Bond",
+  "Macoupin",
+  "Montgomery",
+  "Clinton",
+  "Jersey",
+  "Greene",
+];
+
+export default function Home() {
+  return (
+    <SiteShell>
+      {/* HERO */}
+      <section className="relative isolate overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <img
+            src={heroImg}
+            alt="DJI drone spraying corn field at sunset"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20" />
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 py-20 md:px-8 md:py-32 lg:py-40">
+          <div className="max-w-3xl">
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.3em]"
+              style={{ color: "hsl(var(--gold))" }}
+              data-testid="text-hero-eyebrow"
+            >
+              Madison County, IL &amp; surrounding areas
+            </p>
+            <h1
+              className="mt-5 text-4xl text-white sm:text-5xl md:text-6xl lg:text-7xl"
+              data-testid="text-hero-title"
+            >
+              <span className="font-display block">Precision aerial spraying</span>
+              <span
+                className="font-display-italic block"
+                style={{ color: "hsl(var(--gold))" }}
+              >
+                when your crop can't wait.
+              </span>
+            </h1>
+            <p className="mt-6 max-w-xl text-base text-white/90 md:text-lg">
+              Fungicide and crop application by drone for corn and soybean growers across
+              Southern Illinois. Fast scheduling, careful coverage, and no field compaction.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href={PHONE_TEL}
+                data-testid="link-hero-call"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md hover-elevate"
+              >
+                <Phone className="h-4 w-4" /> Call now
+              </a>
+              <a
+                href={PHONE_SMS}
+                data-testid="link-hero-text"
+                className="inline-flex items-center gap-2 rounded-md border border-white/40 bg-white/10 backdrop-blur px-5 py-3 text-sm font-semibold text-white hover:bg-white/20"
+              >
+                <MessageSquare className="h-4 w-4" /> Text for a quote
+              </a>
+              <Link
+                href="/request"
+                data-testid="link-hero-request"
+                className="inline-flex items-center gap-2 rounded-md border border-white/40 bg-white/10 backdrop-blur px-5 py-3 text-sm font-semibold text-white hover:bg-white/20"
+              >
+                Request online <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <p className="mt-6 inline-flex items-center gap-3 text-sm text-white/85">
+              <a href={PHONE_TEL} className="underline-offset-4 hover:underline">{PHONE}</a>
+              <span aria-hidden="true">·</span>
+              <span>Dylan Rensing</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section className="border-b border-border/60 bg-background">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-14 md:grid-cols-2 md:px-8 md:py-20 lg:grid-cols-4">
+          {features.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="flex flex-col gap-3" data-testid={`feature-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
+              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-semibold">{title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section id="services" className="bg-[hsl(45_22%_94%)] border-b border-border/60 scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">What we do</p>
+            <h2 className="mt-4 text-3xl font-display md:text-4xl lg:text-5xl">
+              Aerial application for{" "}
+              <span className="font-display-italic" style={{ color: "hsl(var(--primary))" }}>
+                row crops.
+              </span>
+            </h2>
+            <p className="mt-5 text-base text-muted-foreground">
+              We specialize in drone-based fungicide and crop protection application for corn
+              and soybeans — built around the timing and tight windows that matter most for
+              Illinois growers.
+            </p>
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {services.map((s) => (
+              <article
+                key={s.title}
+                data-testid={`service-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40"
+              >
+                <h3 className="text-lg font-semibold">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-10">
+            <Link
+              href="/request"
+              data-testid="link-services-request"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover-elevate"
+            >
+              Request a spray quote <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICE AREA */}
+      <section id="service-area" className="border-b border-border/60 scroll-mt-20">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-16 md:grid-cols-5 md:px-8 md:py-24">
+          <div className="md:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">Service area</p>
+            <h2 className="mt-4 text-3xl font-display md:text-4xl">
+              Serving Madison County and{" "}
+              <span className="font-display-italic" style={{ color: "hsl(var(--primary))" }}>
+                surrounding counties.
+              </span>
+            </h2>
+            <p className="mt-5 text-base text-muted-foreground">
+              Based in Madison County, Illinois. We regularly travel to neighboring counties for
+              the right job — if your field is nearby, give us a call to check availability.
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground italic">
+              Outside this list? Call anyway — we'll let you know if we can make it work.
+            </p>
+            <a
+              href={PHONE_TEL}
+              data-testid="link-area-call"
+              className="mt-6 inline-flex items-center gap-2 rounded-md border border-primary/40 px-5 py-3 text-sm font-semibold text-primary hover-elevate"
+            >
+              <Phone className="h-4 w-4" /> Ask about your county
+            </a>
+          </div>
+
+          <div className="md:col-span-3">
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {counties.map((c) => (
+                <li
+                  key={c}
+                  data-testid={`county-${c.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                  className="flex items-center gap-2 rounded-md border border-border bg-card px-4 py-3 text-sm font-medium"
+                >
+                  <MapPin className="h-4 w-4 text-primary" /> {c} County
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT */}
+      <section id="about" className="bg-[hsl(45_22%_94%)] border-b border-border/60 scroll-mt-20">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-16 md:grid-cols-5 md:px-8 md:py-24">
+          <div className="md:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">About</p>
+            <h2 className="mt-4 text-3xl font-display md:text-4xl">
+              Owner-operated, local, and{" "}
+              <span className="font-display-italic" style={{ color: "hsl(var(--primary))" }}>
+                built for Illinois row crop growers.
+              </span>
+            </h2>
+          </div>
+          <div className="space-y-5 text-base leading-relaxed text-muted-foreground md:col-span-3">
+            <p>
+              Rensing Ag Services LLC is a family-run aerial application business based in
+              Madison County, Illinois. We focus on doing one thing well: getting fungicide and
+              crop protection products onto your corn and soybean acres at the right time, with
+              careful coverage and no field damage.
+            </p>
+            <p>
+              When you call, you reach the person flying your fields. No call centers, no
+              middlemen — just straight answers, fair pricing, and reliable scheduling during
+              the season.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact" className="scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
+          <div className="rounded-2xl bg-primary text-primary-foreground p-8 md:p-12 lg:p-16 relative overflow-hidden">
+            <div className="relative z-10 grid grid-cols-1 gap-10 md:grid-cols-2">
+              <div>
+                <p
+                  className="text-xs font-semibold uppercase tracking-[0.3em]"
+                  style={{ color: "hsl(var(--gold))" }}
+                >
+                  Talk to Dylan
+                </p>
+                <h2 className="mt-4 text-3xl font-display md:text-4xl lg:text-5xl">
+                  Got a field that{" "}
+                  <span className="font-display-italic" style={{ color: "hsl(var(--gold))" }}>
+                    needs sprayed?
+                  </span>
+                </h2>
+                <p className="mt-5 max-w-md text-base text-primary-foreground/85">
+                  Call or text to lock in your spot before the spray window closes.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <a
+                  href={PHONE_TEL}
+                  data-testid="link-contact-call"
+                  className="flex items-center gap-3 rounded-lg bg-white/10 px-5 py-4 text-base font-semibold backdrop-blur transition hover:bg-white/20"
+                >
+                  <Phone className="h-5 w-5" /> Call {PHONE}
+                </a>
+                <a
+                  href={PHONE_SMS}
+                  data-testid="link-contact-sms"
+                  className="flex items-center gap-3 rounded-lg bg-white/10 px-5 py-4 text-base font-semibold backdrop-blur transition hover:bg-white/20"
+                >
+                  <MessageSquare className="h-5 w-5" /> Text for a quote
+                </a>
+                <a
+                  href={EMAIL_MAILTO}
+                  data-testid="link-contact-email"
+                  className="flex items-center gap-3 rounded-lg bg-white/10 px-5 py-4 text-base font-semibold backdrop-blur transition hover:bg-white/20"
+                >
+                  <Mail className="h-5 w-5" /> {EMAIL}
+                </a>
+                <Link
+                  href="/request"
+                  data-testid="link-contact-request"
+                  className="flex items-center gap-3 rounded-lg px-5 py-4 text-base font-semibold transition"
+                  style={{ background: "hsl(var(--gold))", color: "hsl(var(--gold-foreground))" }}
+                >
+                  Request a spray quote online <ArrowRight className="h-5 w-5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </SiteShell>
+  );
+}

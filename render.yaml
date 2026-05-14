@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: rensing-ag
+    runtime: node
+    plan: free
+    region: ohio
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_PATH
+        value: /var/data/data.db
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

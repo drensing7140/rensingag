@@ -1,0 +1,368 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2, MapPin, CheckCircle2 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { FieldMapPicker } from "@/components/FieldMapPicker";
+import { SiteShell } from "@/components/SiteShell";
+import type { FieldRequest, InsertSubmission } from "@shared/schema";
+
+const CROP_OPTIONS = ["Corn", "Soybeans", "Wheat", "Sorghum", "Cotton", "Pasture", "Other"];
+
+type LocalField = FieldRequest & { _key: string };
+
+function emptyField(): LocalField {
+  return {
+    _key: Math.random().toString(36).slice(2),
+    name: "",
+    location: "",
+    latitude: null,
+    longitude: null,
+    acres: null,
+    cropType: "",
+    product: "",
+    rate: "",
+    notes: "",
+  };
+}
+
+export default function RequestPage() {
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [customerNotes, setCustomerNotes] = useState("");
+  const [fields, setFields] = useState<LocalField[]>([emptyField()]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [submittedId, setSubmittedId] = useState<number | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: async (data: InsertSubmission) => {
+      const res = await apiRequest("POST", "/api/submissions", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setSubmittedId(data.id);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    onError: () => setErrors(["Sorry, we couldn't send your request. Try again."]),
+  });
+
+  function updateField(key: string, patch: Partial<FieldRequest>) {
+    setFields((arr) => arr.map((f) => (f._key === key ? { ...f, ...patch } : f)));
+  }
+
+  function addField() {
+    setFields((arr) => [...arr, emptyField()]);
+  }
+
+  function removeField(key: string) {
+    setFields((arr) => (arr.length === 1 ? arr : arr.filter((f) => f._key !== key)));
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs: string[] = [];
+    if (!customerName.trim()) errs.push("Your name or farm name is required.");
+    fields.forEach((f, i) => {
+      if (!f.name.trim()) errs.push(`Field ${i + 1}: a name or nickname is required.`);
+    });
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.push("Email looks invalid.");
+    setErrors(errs);
+    if (errs.length) return;
+
+    mutation.mutate({
+      customerName: customerName.trim(),
+      phone: phone || null,
+      email: email || null,
+      address: address || null,
+      customerNotes: customerNotes || null,
+      fields: fields.map(({ _key, ...rest }) => ({
+        ...rest,
+        name: rest.name.trim(),
+        location: rest.location || null,
+        cropType: rest.cropType || null,
+        product: rest.product || null,
+        rate: rest.rate || null,
+        notes: rest.notes || null,
+        acres: rest.acres ?? null,
+      })),
+    });
+  }
+
+  if (submittedId) {
+    return (
+      <SiteShell>
+        <div className="mx-auto max-w-2xl px-4 py-16 md:px-6 md:py-24">
+          <Card className="border-card-border">
+            <CardContent className="flex flex-col items-center gap-4 px-6 py-12 text-center">
+              <CheckCircle2 className="h-12 w-12 text-primary" />
+              <h1 className="text-2xl font-display">Thanks, {customerName.split(" ")[0] || "neighbor"}.</h1>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Your spray request has been sent to the Rensing Ag crew. We'll reach out shortly
+                to confirm details and schedule a visit.
+              </p>
+              <Button
+                data-testid="button-submit-another"
+                variant="outline"
+                onClick={() => {
+                  setSubmittedId(null);
+                  setCustomerName("");
+                  setPhone("");
+                  setEmail("");
+                  setAddress("");
+                  setCustomerNotes("");
+                  setFields([emptyField()]);
+                }}
+              >
+                Submit another request
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </SiteShell>
+    );
+  }
+
+  return (
+    <SiteShell>
+      <div className="mx-auto max-w-3xl px-4 py-10 md:px-6 md:py-16">
+        <div className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">Request a spray quote</p>
+          <h1 className="mt-3 text-3xl font-display md:text-4xl">
+            Tell us about your{" "}
+            <span className="font-display-italic" style={{ color: "hsl(var(--primary))" }}>fields.</span>
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Fill in your contact info, then add each field you'd like sprayed. Drop a pin on the
+            map so our crew knows exactly where to go.
+          </p>
+        </div>
+
+        {errors.length > 0 && (
+          <Card className="mb-6 border-destructive/40 bg-destructive/10">
+            <CardContent className="px-4 py-3 text-sm">
+              <ul className="list-disc pl-5 text-destructive" data-testid="form-errors">
+                {errors.map((e, i) => <li key={i}>{e}</li>)}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        <form onSubmit={submit} className="space-y-8">
+          {/* Contact */}
+          <Card className="border-card-border">
+            <CardContent className="space-y-4 px-5 py-5 md:px-6">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your info</h2>
+              <div>
+                <Label htmlFor="customerName">Name or farm name *</Label>
+                <Input
+                  id="customerName"
+                  data-testid="input-customer-name"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="e.g. Miller Family Farm"
+                  className="mt-1"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" data-testid="input-phone" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(618) 555-0123" className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" data-testid="input-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="mt-1" />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="address">Mailing address</Label>
+                <Input id="address" data-testid="input-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Country Rd, Edwardsville, IL" className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="customerNotes">Anything else we should know?</Label>
+                <Textarea
+                  id="customerNotes"
+                  data-testid="input-customer-notes"
+                  rows={3}
+                  value={customerNotes}
+                  onChange={(e) => setCustomerNotes(e.target.value)}
+                  placeholder="Best time to call, gate codes, billing questions, etc."
+                  className="mt-1"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Fields */}
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Fields to spray</h2>
+              <span className="text-xs text-muted-foreground">{fields.length} field{fields.length === 1 ? "" : "s"}</span>
+            </div>
+
+            <div className="space-y-4">
+              {fields.map((f, i) => (
+                <Card key={f._key} className="border-card-border" data-testid={`card-field-${i}`}>
+                  <CardContent className="space-y-4 px-5 py-5 md:px-6">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-semibold">Field {i + 1}</div>
+                      {fields.length > 1 && (
+                        <button
+                          type="button"
+                          data-testid={`button-remove-field-${i}`}
+                          onClick={() => removeField(f._key)}
+                          className="hover-elevate inline-flex items-center gap-1 rounded p-1.5 text-xs text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`name-${i}`}>Field name or nickname *</Label>
+                      <Input
+                        id={`name-${i}`}
+                        data-testid={`input-field-name-${i}`}
+                        value={f.name}
+                        onChange={(e) => updateField(f._key, { name: e.target.value })}
+                        placeholder="North 40, Smith Bottom, etc."
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`location-${i}`}>Location / directions</Label>
+                      <Input
+                        id={`location-${i}`}
+                        data-testid={`input-field-location-${i}`}
+                        value={f.location ?? ""}
+                        onChange={(e) => updateField(f._key, { location: e.target.value })}
+                        placeholder="Address, road names, or short directions"
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" /> Drop a pin on the field
+                      </Label>
+                      <div className="mt-2">
+                        <FieldMapPicker
+                          latitude={f.latitude ?? null}
+                          longitude={f.longitude ?? null}
+                          onChange={(lat, lng) =>
+                            updateField(f._key, { latitude: lat, longitude: lng })
+                          }
+                          addressHint={f.location ?? address}
+                          testIdPrefix={`map-${i}`}
+                          height={300}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label htmlFor={`acres-${i}`}>Approximate acres</Label>
+                        <Input
+                          id={`acres-${i}`}
+                          data-testid={`input-field-acres-${i}`}
+                          inputMode="decimal"
+                          value={f.acres == null ? "" : String(f.acres)}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            updateField(f._key, { acres: v === "" ? null : Number(v) });
+                          }}
+                          placeholder="40"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`crop-${i}`}>Crop</Label>
+                        <Select
+                          value={f.cropType || undefined}
+                          onValueChange={(v) => updateField(f._key, { cropType: v })}
+                        >
+                          <SelectTrigger id={`crop-${i}`} data-testid={`select-crop-${i}`} className="mt-1">
+                            <SelectValue placeholder="Select crop" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CROP_OPTIONS.map((c) => (
+                              <SelectItem key={c} value={c} data-testid={`option-crop-${i}-${c}`}>{c}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label htmlFor={`product-${i}`}>Product (if you know)</Label>
+                        <Input
+                          id={`product-${i}`}
+                          data-testid={`input-field-product-${i}`}
+                          value={f.product ?? ""}
+                          onChange={(e) => updateField(f._key, { product: e.target.value })}
+                          placeholder="e.g. Veltyma, Miravis Neo"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`rate-${i}`}>Rate (if you know)</Label>
+                        <Input
+                          id={`rate-${i}`}
+                          data-testid={`input-field-rate-${i}`}
+                          value={f.rate ?? ""}
+                          onChange={(e) => updateField(f._key, { rate: e.target.value })}
+                          placeholder="e.g. 7 oz/acre"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`notes-${i}`}>Notes for the crew</Label>
+                      <Textarea
+                        id={`notes-${i}`}
+                        data-testid={`input-field-notes-${i}`}
+                        rows={2}
+                        value={f.notes ?? ""}
+                        onChange={(e) => updateField(f._key, { notes: e.target.value })}
+                        placeholder="Buffers, sensitive neighbors, timing, etc."
+                        className="mt-1"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addField}
+              data-testid="button-add-field"
+              className="mt-3 w-full"
+            >
+              <Plus className="h-4 w-4 mr-1.5" /> Add another field
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <Button type="submit" disabled={mutation.isPending} data-testid="button-submit-request" size="lg">
+              {mutation.isPending ? "Sending…" : "Send request"}
+            </Button>
+          </div>
+        </form>
+
+      </div>
+    </SiteShell>
+  );
+}

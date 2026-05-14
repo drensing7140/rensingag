@@ -1,0 +1,206 @@
+import { Link, useLocation } from "wouter";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { LayoutDashboard, Users, MapPin, Moon, Sun, SprayCan, Inbox as InboxIcon, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { LogoutButton } from "@/components/EmployeeGate";
+import type { Submission } from "@shared/schema";
+
+const navItems = [
+  { href: "/employee", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard", exact: true },
+  { href: "/employee/inbox", label: "Inbox", icon: InboxIcon, testId: "nav-inbox" },
+  { href: "/employee/customers", label: "Customers", icon: Users, testId: "nav-customers" },
+  { href: "/employee/fields", label: "Fields", icon: MapPin, testId: "nav-fields" },
+];
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
+  return (
+    <button
+      data-testid="button-theme-toggle"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      onClick={() => setIsDark((d) => !d)}
+      className="hover-elevate flex h-9 w-9 items-center justify-center rounded-md border border-border text-foreground"
+    >
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
+
+function Logo() {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+        <SprayCan className="h-5 w-5" strokeWidth={2.25} />
+      </div>
+      <div className="flex flex-col leading-tight">
+        <span className="text-sm font-semibold tracking-tight">Rensing Ag</span>
+        <span className="text-xs text-muted-foreground">Crew Portal</span>
+      </div>
+    </div>
+  );
+}
+
+function NavLink({
+  href,
+  label,
+  Icon,
+  testId,
+  active,
+  badge,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  Icon: any;
+  testId: string;
+  active: boolean;
+  badge?: number;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      data-testid={testId}
+      onClick={onClick}
+      className={cn(
+        "hover-elevate flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+        active
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "text-sidebar-foreground/80"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      <span className="flex-1">{label}</span>
+      {badge !== undefined && badge > 0 && (
+        <span
+          data-testid={`badge-${testId}`}
+          className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground"
+        >
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  const [location] = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const { data: submissions } = useQuery<Submission[]>({
+    queryKey: ["/api/submissions"],
+    refetchInterval: 30000,
+    retry: false,
+  });
+  const newCount = (submissions ?? []).filter((s) => s.status === "new").length;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Top bar (mobile) */}
+      <header className="md:hidden sticky top-0 z-40 flex items-center justify-between border-b border-border bg-sidebar px-4 py-3">
+        <Logo />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            data-testid="button-mobile-menu"
+            aria-label="Open menu"
+            onClick={() => setMobileOpen((o) => !o)}
+            className="hover-elevate rounded-md border border-border px-3 py-1.5 text-sm"
+          >
+            Menu
+            {newCount > 0 && (
+              <span className="ml-2 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                {newCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      <div className="md:flex md:min-h-screen">
+        {/* Sidebar (desktop) */}
+        <aside className="hidden md:flex md:w-60 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar md:p-4">
+          <div className="mb-6 px-1">
+            <Logo />
+          </div>
+          <nav className="flex flex-col gap-1">
+            {navItems.map(({ href, label, icon: Icon, testId, exact }) => {
+              const active = exact ? location === href : location === href || location.startsWith(href + "/");
+              return (
+                <NavLink
+                  key={href}
+                  href={href}
+                  label={label}
+                  Icon={Icon}
+                  testId={testId}
+                  active={active}
+                  badge={href === "/employee/inbox" ? newCount : undefined}
+                />
+              );
+            })}
+          </nav>
+          <div className="mt-auto flex flex-col gap-3 pt-6">
+            <div className="flex items-center gap-2">
+              <Link
+                href="/"
+                data-testid="link-public-site"
+                className="hover-elevate inline-flex flex-1 items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs font-medium"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> Public site
+              </Link>
+              <ThemeToggle />
+            </div>
+            <LogoutButton />
+            <span className="text-[10px] text-muted-foreground">Rensing Ag Services LLC</span>
+          </div>
+        </aside>
+
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <div className="md:hidden border-b border-border bg-sidebar px-4 py-3">
+            <nav className="flex flex-col gap-1">
+              {navItems.map(({ href, label, icon: Icon, testId, exact }) => {
+                const active = exact ? location === href : location === href || location.startsWith(href + "/");
+                return (
+                  <NavLink
+                    key={href}
+                    href={href}
+                    label={label}
+                    Icon={Icon}
+                    testId={`${testId}-mobile`}
+                    active={active}
+                    badge={href === "/employee/inbox" ? newCount : undefined}
+                    onClick={() => setMobileOpen(false)}
+                  />
+                );
+              })}
+              <div className="mt-2 flex items-center gap-2">
+                <Link
+                  href="/"
+                  data-testid="link-public-site-mobile"
+                  onClick={() => setMobileOpen(false)}
+                  className="hover-elevate inline-flex flex-1 items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs font-medium"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> Public site
+                </Link>
+                <LogoutButton />
+              </div>
+            </nav>
+          </div>
+        )}
+
+        {/* Main content */}
+        <main className="flex-1">
+          <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-10">{children}</div>
+        </main>
+      </div>
+    </div>
+  );
+}
